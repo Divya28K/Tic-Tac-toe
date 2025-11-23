@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #062a6e, #0e4ab3);
+            min-height: 100vh;
+            color: white;
+            padding-top: 20px;
+        }
+
+        h1 {
+            letter-spacing: 2px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 8px;
+            padding: 12px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(6px);
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .cell:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .status, .scoreboard {
+            font-size: 22px;
+            margin: 15px 0;
+        }
+
+        .reset-btn, .start-btn, select {
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .reset-btn {
+            background: #ff4b5c;
+            color: white;
+        }
+
+        .start-btn {
+            background: #00c9a7;
+            color: white;
+        }
+
+        select {
+            background: white;
+            color: #333;
+        }
+
+        .winning-cell {
+            background: #7CFC00 !important;
+            color: black;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    
+
+    <div class="card">
+        <h2>TIC TAC TOE</h2>
+        <div class="scoreboard">X: <span id="scoreX">0</span> | O: <span id="scoreO">0</span></div>
+
+        <div>
+            <label for="player-choice">Choose your marker: </label>
+            <select id="player-choice">
+                <option value="X">X</option>
+                <option value="O">O</option>
+            </select>
+            <button class="start-btn" onclick="startGame()">Start Game</button>
+        </div>
+    </div>
+
+    <div class="game-board" id="board">
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+    </div>
+
+    <div class="status" data-status>Select a marker and start the game</div>
+
+    <button class="reset-btn" data-reset>Reset Game</button>
+
+    <script>
+        const cells = document.querySelectorAll('[data-cell]');
+        const status = document.querySelector('[data-status]');
+        const resetButton = document.querySelector('[data-reset]');
+        const scoreX = document.getElementById('scoreX');
+        const scoreO = document.getElementById('scoreO');
+        const playerChoice = document.getElementById('player-choice');
+
+        let currentPlayer;
+        let userMarker = 'X';
+        let gameActive = false;
+        let gameState = ['', '', '', '', '', '', '', '', ''];
+        let scores = { X: 0, O: 0 };
+
+        const winningCombinations = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        function startGame() {
+            userMarker = playerChoice.value;
+            currentPlayer = userMarker;
+            gameActive = true;
+            status.textContent = `${currentPlayer}'s turn`;
+        }
+
+        function handleCellClick(e) {
+            if (!gameActive) return;
+
+            const cell = e.target;
+            const cellIndex = Array.from(cells).indexOf(cell);
+
+            if (gameState[cellIndex] !== '') return;
+
+            gameState[cellIndex] = currentPlayer;
+            cell.textContent = currentPlayer;
+
+            if (checkWin()) {
+                gameActive = false;
+                status.textContent = `${currentPlayer} Wins!`;
+                scores[currentPlayer]++;
+                updateScoreboard();
+                highlightWinningCombination();
+                return;
+            }
+
+            if (checkDraw()) {
+                gameActive = false;
+                status.textContent = "Draw!";
+                return;
+            }
+
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            status.textContent = `${currentPlayer}'s turn`;
+        }
+
+        function checkWin() {
+            return winningCombinations.some(combination => {
+                return combination.every(index => gameState[index] === currentPlayer);
+            });
+        }
+
+        function checkDraw() {
+            return gameState.every(cell => cell !== '');
+        }
+
+        function highlightWinningCombination() {
+            winningCombinations.forEach(combination => {
+                if (combination.every(index => gameState[index] === currentPlayer)) {
+                    combination.forEach(index => {
+                        cells[index].classList.add('winning-cell');
+                    });
+                }
+            });
+        }
+
+        function resetGame() {
+            gameState = ['', '', '', '', '', '', '', '', ''];
+            gameActive = false;
+            status.textContent = "Select a marker and start the game";
+
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('winning-cell');
+            });
+        }
+
+        function updateScoreboard() {
+            scoreX.textContent = scores.X;
+            scoreO.textContent = scores.O;
+        }
+
+        cells.forEach(cell => {
+            cell.addEventListener('click', handleCellClick);
+        });
+
+        resetButton.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>
